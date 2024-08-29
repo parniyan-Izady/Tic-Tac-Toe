@@ -4,46 +4,35 @@ import java.util.Random;
 public class Main {
     public static void main(String[] args) {
         int f = 20;
+        // Main loop to keep the program running until the user exits
         while (f != 3) {
             Scanner scanner = new Scanner(System.in);
-            menu();
+            displayMainMenu();
             f = scanner.nextInt();
-            if (f == 1) {
+            if (f == 1) { // Single-player game loop
                 int x = 10;
                 while (x != 1) {
-                    char[] str = new char[16];
-                    getRandomNumbers1(str);
-                    onePlayerMode(str);
-                    System.out.println("-------------------------------------");
-                    System.out.println("1)Return to first menu!");
-                    System.out.println("2)Restart this game!");
-                    System.out.println("Enter your number...");
+                    char[] board = new char[16];
+                    initializeLockedCells(board);
+                    playOnePlayerGame(board);
+                    displayPostGameMenu();
                     x = scanner.nextInt();
-                    if (x == 1) {
-                        break;
-                    }
-                    while (x > 2) {
+                    while (x > 2) { // Handle invalid input for post-game menu
                         System.out.println("Invalid number!");
                         System.out.println("Enter your number...");
                         x = scanner.nextInt();
                     }
                 }
             }
-            if (f == 2) {
+            if (f == 2) { // Two-player game loop
                 int x = 0;
                 while (x != 1) {
-                    char[] str = new char[16];
-                    getRandomNumbers1(str);
-                    twoPlayersMode(str);
-                    System.out.println("-------------------------------------");
-                    System.out.println("1)Return to first menu!");
-                    System.out.println("2)Restart this game!");
-                    System.out.println("Enter your number...");
+                    char[] board = new char[16];
+                    initializeLockedCells(board);
+                    playTwoPlayersGame(board);
+                    displayPostGameMenu();
                     x = scanner.nextInt();
-                    if (x == 1) {
-                        break;
-                    }
-                    while (x > 2) {
+                    while (x > 2) { // Handle invalid input for post-game menu
                         System.out.println("Invalid number!");
                         System.out.println("Enter your number...");
                         x = scanner.nextInt();
@@ -53,143 +42,130 @@ public class Main {
         }
     }
 
-    //Menu surface
-    public static void menu() {
+    public static void displayMainMenu() {
+        // Displays the main menu options for the user
         System.out.println("1) Play with computer");
         System.out.println("2) Two players");
         System.out.println("3) Exit");
         System.out.println("Enter your number...");
     }
 
-    //Playing with computer
-    public static void onePlayerMode(char str[]) {
-        int p = 0;
-        showString(str);
-        readNumber(str, "Enter your number please:", 'x');
-        {
-            while (p < 6) {
-                if (p < 6) {
-                    showString(str);
-                    getRandomNumbers2(str);
-                    p = winner(str, "Computer wins!", 'o', p);
-                }
-                if (p < 6) {
-                    showString(str);
-                    readNumber(str, "Enter your number please", 'x');
-                    p = winner(str, "You win!", 'x', p);
-                    p++;
-                }
+    public static void displayPostGameMenu() {
+        // Displays options after a game ends
+        System.out.println("-------------------------------------");
+        System.out.println("1) Return to main menu!");
+        System.out.println("2) Restart this game!");
+        System.out.println("Enter your number...");
+    }
+
+    public static void playOnePlayerGame(char[] board) {
+        int moveCount = 0;
+        displayBoard(board); // Show initial board state
+        getPlayerMove(board, "Enter your number please:", 'x'); // Player's first move
+        while (moveCount < 6) {
+            displayBoard(board);
+            getComputerMove(board); // Computer's move
+            moveCount = checkForWinner(board, "Computer wins!", 'o', moveCount); // Check if computer wins
+            if (moveCount < 6) {
+                displayBoard(board);
+                getPlayerMove(board, "Enter your number please", 'x'); // Player's move
+                moveCount = checkForWinner(board, "You win!", 'x', moveCount); // Check if player wins
+                moveCount++;
             }
-            showString(str);
-            if (p == 6) {
-                System.out.println("It's a tie");
-            }
+        }
+        displayBoard(board); // Final board state
+        if (moveCount == 6) {
+            System.out.println("It's a tie"); // Declare a tie if no winner
         }
     }
 
-    //Playing with another player
-    public static void twoPlayersMode(char str[]) {
-        int p = 0;
-        showString(str);
-        readNumber(str, "Player 1:", 'x');
-        while (p < 6) {
-            if (p < 6) {
-                showString(str);
-                readNumber(str, "player 2:", 'o');
-                p = winner(str, "Player 2 wins!", 'o', p);
-            }
-            
-            if (p < 6) {
-                showString(str);
-                readNumber(str, "player 1:", 'x');
-                p = winner(str, "Player 1 wins!", 'x', p);
-                p++;
+    public static void playTwoPlayersGame(char[] board) {
+        int moveCount = 0;
+        displayBoard(board); // Show initial board state
+        getPlayerMove(board, "Player 1:", 'x'); // Player 1's first move
+        while (moveCount < 6) {
+            displayBoard(board);
+            getPlayerMove(board, "Player 2:", 'o'); // Player 2's move
+            moveCount = checkForWinner(board, "Player 2 wins!", 'o', moveCount); // Check if Player 2 wins
+            if (moveCount < 6) {
+                displayBoard(board);
+                getPlayerMove(board, "Player 1:", 'x'); // Player 1's move
+                moveCount = checkForWinner(board, "Player 1 wins!", 'x', moveCount); // Check if Player 1 wins
+                moveCount++;
             }
         }
-        showString(str);
-        if (p == 6) {
-            System.out.println("It's a tie!");
+        displayBoard(board); // Final board state
+        if (moveCount == 6) {
+            System.out.println("It's a tie!"); // Declare a tie if no winner
         }
     }
 
-    //Getting three random numbers for locking
-    public static void getRandomNumbers1(char[] str) {
-        int i = 0;
-        while (i != 3) {
+    public static void initializeLockedCells(char[] board) {
+        int lockedCells = 0;
+        // Randomly lock 3 cells on the board
+        while (lockedCells != 3) {
             Random random = new Random();
-            int value = random.nextInt(16);
-            if (str[value] != '#') {
-                str[value] = '#';
-                i++;
+            int randomIndex = random.nextInt(16);
+            if (board[randomIndex] != '#') {
+                board[randomIndex] = '#';
+                lockedCells++;
             }
         }
     }
 
-    //Getting random numbers for computer
-    public static void getRandomNumbers2(char[] str) {
+    public static void getComputerMove(char[] board) {
+        // Computer randomly selects a valid cell for its move
         while (true) {
-            Random random2 = new Random();
-            int value = random2.nextInt(16);
-            if (str[value] != '#' && str[value] != 'x' && str[value] != 'o') {
-                str[value] = 'o';
+            Random random = new Random();
+            int randomIndex = random.nextInt(16);
+            if (board[randomIndex] != '#' && board[randomIndex] != 'x' && board[randomIndex] != 'o') {
+                board[randomIndex] = 'o';
                 break;
             }
         }
     }
 
-    //Winner algorithm
-    public static int checkWinner(char[] str, String prompt2, char chr, int p, int u, int z) {
-        if (p < 6) {
-            if (str[u] == chr && str[u + z] == chr && str[u + 2 * z] == chr) {
-                System.out.println(prompt2);
-                p = 10;
+    public static int checkForWinner(char[] board, String message, char playerSymbol, int moveCount) {
+        // Check for winning condition in rows
+        for (int row = 0; row < 4; row++) {
+            moveCount = evaluateWinningCondition(board, message, playerSymbol, moveCount, 4 * row, 1);
+        }
+        // Check for winning condition in columns
+        for (int col = 0; col < 4; col++) {
+            moveCount = evaluateWinningCondition(board, message, playerSymbol, moveCount, col, 4);
+        }
+        // Check for winning condition in diagonals
+        moveCount = evaluateWinningCondition(board, message, playerSymbol, moveCount, 0, 5);
+        moveCount = evaluateWinningCondition(board, message, playerSymbol, moveCount, 3, 3);
+        return moveCount;
+    }
+
+    public static int evaluateWinningCondition(char[] board, String message, char playerSymbol, int moveCount, int startIndex, int step) {
+        // Evaluate the board for a winning condition based on start index and step size
+        if (moveCount < 6) {
+            if (board[startIndex] == playerSymbol && board[startIndex + step] == playerSymbol && board[startIndex + 2 * step] == playerSymbol) {
+                System.out.println(message);
+                moveCount = 10; // Arbitrary value to indicate a win
             }
         }
-        return p;
+        return moveCount;
     }
 
-    //Winner
-    public static int winner(char[] str, String prompt2, char chr, int p) {
-        //checking the game algorithm with step 1
-        for (int y = 0; y < 4; y++) {
-            p = checkWinner(str, prompt2, chr, p, 4 * y, 1);
-            p = checkWinner(str, prompt2, chr, p, 4 * y + 1, 1);
-        }
-
-        //checking the game algorithm with step 3
-        p = checkWinner(str, prompt2, chr, p, 2, 3);
-        p = checkWinner(str, prompt2, chr, p, 3, 3);
-        p = checkWinner(str, prompt2, chr, p, 6, 3);
-        p = checkWinner(str, prompt2, chr, p, 7, 3);
-
-        //checking the game algorithm with step 4
-        for (int u = 0; u < 8; u++) {
-            p = checkWinner(str, prompt2, chr, p, u, 4);
-        }
-
-        //checking the game algorithm with step 5
-        p = checkWinner(str, prompt2, chr, p, 0, 5);
-        p = checkWinner(str, prompt2, chr, p, 1, 5);
-        p = checkWinner(str, prompt2, chr, p, 4, 5);
-        p = checkWinner(str, prompt2, chr, p, 5, 5);
-        return p;
-    }
-
-    //Showing the appearance of the game
-    public static void showString(char[] str) {
+    public static void displayBoard(char[] board) {
+        // Display the current state of the game board
         System.out.println("-------------------------------------");
-        for (int z = 0; z < 4; z++) {
+        for (int row = 0; row < 4; row++) {
             System.out.print("|   ");
-            for (int y = 4 * z; y < 4 * (z + 1); y++) {
-                if (str[y] != '#' && str[y] != 'x' && str[y] != 'o') {
-                    if (y < 9) {
+            for (int col = 4 * row; col < 4 * (row + 1); col++) {
+                if (board[col] != '#' && board[col] != 'x' && board[col] != 'o'){
+                    if (col < 9) {
                         System.out.print(0);
                     }
-                    System.out.print(y + 1);
+                    System.out.print(col + 1);
                     System.out.print("   |   ");
                 } else {
                     System.out.print(" ");
-                    System.out.print(str[y]);
+                    System.out.print(board[col]);
                     System.out.print("   |   ");
                 }
             }
@@ -198,15 +174,15 @@ public class Main {
         }
     }
 
-    //Getting the numbers and checking its validity
-    public static void readNumber(char[] str, String prompt, char value3) {
+    public static void getPlayerMove(char[] board, String prompt, char playerSymbol) {
+        // Get and validate player's move
         while (true) {
             Scanner scanner = new Scanner(System.in);
             System.out.println(prompt);
-            int value2 = scanner.nextInt();
-            value2 = value2 - 1;
-            if (value2 >= 0 && value2 <= 15 && str[value2] != '#' && str[value2] != 'x' && str[value2] != 'o') {
-                str[value2] = value3;
+            int selectedCell = scanner.nextInt();
+            selectedCell = selectedCell - 1;
+            if (selectedCell >= 0 && selectedCell <= 15 && board[selectedCell] != '#' && board[selectedCell] != 'x' && board[selectedCell] != 'o') {
+                board[selectedCell] = playerSymbol;
                 break;
             }
             System.out.println("Invalid number!");
