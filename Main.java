@@ -3,25 +3,19 @@ import java.util.Random;
 
 public class Main {
     public static void main(String[] args) {
-        int f = 20;
-        // Main loop to keep the program running until the user exits
-        while (f != 3) {
+        int f = 0;
+        while (f != 3) { // Main loop to keep the program running until the user exits
             Scanner scanner = new Scanner(System.in);
             displayMainMenu();
-            f = scanner.nextInt();
+            f = getValidInput(scanner, 1, 3);
             if (f == 1) { // Single-player game loop
-                int x = 10;
+                int x = 0;
                 while (x != 1) {
                     char[] board = new char[16];
                     initializeLockedCells(board);
                     playOnePlayerGame(board);
                     displayPostGameMenu();
-                    x = scanner.nextInt();
-                    while (x > 2) { // Handle invalid input for post-game menu
-                        System.out.println("Invalid number!");
-                        System.out.println("Enter your number...");
-                        x = scanner.nextInt();
-                    }
+                    x = getValidInput(scanner, 1, 2);
                 }
             }
             if (f == 2) { // Two-player game loop
@@ -31,12 +25,7 @@ public class Main {
                     initializeLockedCells(board);
                     playTwoPlayersGame(board);
                     displayPostGameMenu();
-                    x = scanner.nextInt();
-                    while (x > 2) { // Handle invalid input for post-game menu
-                        System.out.println("Invalid number!");
-                        System.out.println("Enter your number...");
-                        x = scanner.nextInt();
-                    }
+                    x = getValidInput(scanner, 1, 2);
                 }
             }
         }
@@ -157,7 +146,7 @@ public class Main {
         for (int row = 0; row < 4; row++) {
             System.out.print("|   ");
             for (int col = 4 * row; col < 4 * (row + 1); col++) {
-                if (board[col] != '#' && board[col] != 'x' && board[col] != 'o'){
+                if (board[col] != '#' && board[col] != 'x' && board[col] != 'o') {
                     if (col < 9) {
                         System.out.print(0);
                     }
@@ -179,13 +168,28 @@ public class Main {
         while (true) {
             Scanner scanner = new Scanner(System.in);
             System.out.println(prompt);
-            int selectedCell = scanner.nextInt();
-            selectedCell = selectedCell - 1;
-            if (selectedCell >= 0 && selectedCell <= 15 && board[selectedCell] != '#' && board[selectedCell] != 'x' && board[selectedCell] != 'o') {
+            int selectedCell = getValidInput(scanner, 1, 16) - 1;
+            if (board[selectedCell] != '#' && board[selectedCell] != 'x' && board[selectedCell] != 'o') {
                 board[selectedCell] = playerSymbol;
                 break;
             }
-            System.out.println("Invalid number!");
+            System.out.println("Invalid cell! Choose an available cell.");
+        }
+    }
+
+    public static int getValidInput(Scanner scanner, int min, int max) {
+        // Validates and returns a number within the specified range
+        int input = 0;
+        while (true) {
+            if (scanner.hasNextInt()) {
+                input = scanner.nextInt();
+                if (input >= min && input <= max) {
+                    return input;
+                }
+            } else {
+                scanner.next(); // Skip the invalid input
+            }
+            System.out.println("Invalid number! Please enter a number between " + min + " and " + max + ":");
         }
     }
 }
