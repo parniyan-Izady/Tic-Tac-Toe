@@ -3,32 +3,24 @@ import java.util.Random;
 
 public class Main {
     public static void main(String[] args) {
-        int f = 0;
-        while (f != 3) { // Main loop to keep the program running until the user exits
-            Scanner scanner = new Scanner(System.in);
+        Scanner scanner = new Scanner(System.in);
+        int mainMenuOption = 0;
+
+        while (mainMenuOption != 3) { // Main loop to keep the program running until the user exits
             displayMainMenu();
-            f = getValidInput(scanner, 1, 3);
-            if (f == 1) { // Single-player game loop
-                int x = 0;
-                while (x != 1) {
+            mainMenuOption = getValidInput(scanner, 1, 3);
+            if (mainMenuOption == 1 || mainMenuOption == 2) { // Single-player or Two-player game loop
+                int postGameOption = 0;
+                while (postGameOption != 1) {
                     char[] board = new char[16];
                     initializeLockedCells(board);
-                    playOnePlayerGame(board);
+                    playGame(board, mainMenuOption);
                     displayPostGameMenu();
-                    x = getValidInput(scanner, 1, 2);
-                }
-            }
-            if (f == 2) { // Two-player game loop
-                int x = 0;
-                while (x != 1) {
-                    char[] board = new char[16];
-                    initializeLockedCells(board);
-                    playTwoPlayersGame(board);
-                    displayPostGameMenu();
-                    x = getValidInput(scanner, 1, 2);
+                    postGameOption = getValidInput(scanner, 1, 2);
                 }
             }
         }
+        scanner.close();
     }
 
     public static void displayMainMenu() {
@@ -47,39 +39,24 @@ public class Main {
         System.out.println("Enter your number...");
     }
 
-    public static void playOnePlayerGame(char[] board) {
+    public static void playGame(char[] board, int gameMode) {
         int moveCount = 0;
         displayBoard(board); // Show initial board state
-        getPlayerMove(board, "Enter your number please:", 'x'); // Player's first move
-        while (moveCount < 6) {
-            displayBoard(board);
-            getComputerMove(board); // Computer's move
-            moveCount = checkForWinner(board, "Computer wins!", 'o', moveCount); // Check if computer wins
-            if (moveCount < 6) {
-                displayBoard(board);
-                getPlayerMove(board, "Enter your number please", 'x'); // Player's move
-                moveCount = checkForWinner(board, "You win!", 'x', moveCount); // Check if player wins
-                moveCount++;
-            }
-        }
-        displayBoard(board); // Final board state
-        if (moveCount == 6) {
-            System.out.println("It's a tie"); // Declare a tie if no winner
-        }
-    }
+        getPlayerMove(board, gameMode == 1 ? "Enter your number please:" : "Player 1:", 'x'); // First move
 
-    public static void playTwoPlayersGame(char[] board) {
-        int moveCount = 0;
-        displayBoard(board); // Show initial board state
-        getPlayerMove(board, "Player 1:", 'x'); // Player 1's first move
         while (moveCount < 6) {
             displayBoard(board);
-            getPlayerMove(board, "Player 2:", 'o'); // Player 2's move
-            moveCount = checkForWinner(board, "Player 2 wins!", 'o', moveCount); // Check if Player 2 wins
+            if (gameMode == 1) {
+                getComputerMove(board); // Computer's move
+                moveCount = checkForWinner(board, "Computer wins!", 'o', moveCount); // Check if computer wins
+            } else {
+                getPlayerMove(board, "Player 2:", 'o'); // Player 2's move
+                moveCount = checkForWinner(board, "Player 2 wins!", 'o', moveCount); // Check if Player 2 wins
+            }
             if (moveCount < 6) {
                 displayBoard(board);
-                getPlayerMove(board, "Player 1:", 'x'); // Player 1's move
-                moveCount = checkForWinner(board, "Player 1 wins!", 'x', moveCount); // Check if Player 1 wins
+                getPlayerMove(board, gameMode == 1 ? "Enter your number please" : "Player 1:", 'x'); // Player's move
+                moveCount = checkForWinner(board, gameMode == 1 ? "You win!" : "Player 1 wins!", 'x', moveCount); // Check if player wins
                 moveCount++;
             }
         }
